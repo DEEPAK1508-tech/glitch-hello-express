@@ -1,22 +1,36 @@
-// server.js
-// where your node app starts
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-// init project
-var express = require('express');
-var app = express();
+// Use body parser to parse incoming requests
+app.use(express.json());
 
-// we've started you off with Express, 
-// but feel free to use whatever libs or frameworks you'd like through `package.json`.
+// Replace with your own secure verify token
+const VERIFY_TOKEN = "msme_bot_2025";
 
-// http://expressjs.com/en/starter/static-files.html
-app.use(express.static('public'));
+// Webhook verification endpoint
+app.get('/webhook', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
 
-// http://expressjs.com/en/starter/basic-routing.html
-app.get('/', function(request, response) {
-  response.sendFile(__dirname + '/views/index.html');
+  if (mode && token) {
+    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+      console.log("Webhook verified!");
+      res.status(200).send(challenge);
+    } else {
+      res.sendStatus(403);
+    }
+  }
 });
 
-// listen for requests :)
-var listener = app.listen(process.env.PORT, function() {
-  console.log('Your app is listening on port ' + listener.address().port);
+// Webhook to receive incoming messages
+app.post('/webhook', (req, res) => {
+  console.log('Received webhook event:');
+  console.log(JSON.stringify(req.body, null, 2));
+  res.sendStatus(200);
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
